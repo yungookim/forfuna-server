@@ -30,6 +30,11 @@ app.post('/prepare_profile', function(req, res, next){
 	//BUG : parse needs to be done twice.
 	//it will do for now. @Fix it 
 	data = JSON.parse(JSON.parse(data));
+	if (data.id == "GUBxhEHhQo"){
+		//dont save. this is a new user.
+		res.send('');
+		return;
+	}
 	var key = data.id + "@" + data.uuid;
 	//Save to memcached
 	client.set(key, JSON.stringify(data), { flags: 0, exptime: 0}, function(err, status) {
