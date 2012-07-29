@@ -16,7 +16,7 @@ client.connect(function() {
 var app = module.exports = express.createServer();
 
 app.configure(function(){
- 	app.use(express.bodyParser());
+	app.use(express.bodyParser());
 });
 
 app.get('/*', function(req, res, next){
@@ -27,17 +27,36 @@ app.get('/*', function(req, res, next){
 app.post('/prepare_profile', function(req, res, next){
 	var data = JSON.stringify(req.body);
 	data = data.substring(1, data.length-4);
-	data = JSON.parse(data);
-	var key = data.id + "#" + data.uuid;
-	//strip them so that the end users cannot read it.
-	data.id = '';
-	data.uuid = '';
+	//BUG : parse needs to be done twice.
+	//it will do for now. @Fix it 
+	data = JSON.parse(JSON.parse(data));
+	var key = data.id + "@" + data.uuid;
 	//Save to memcached
-	client.set(key, data, { flags: 0, exptime: 0}, function(err, status) {
+	client.set(key, JSON.stringify(data), { flags: 0, exptime: 0}, function(err, status) {
 		if (err) { 
-			console.log(err); // 'STORED' on success!
+			console.log(err);
+			return;
 		}
+		console.log(status);
 	});
+	res.send('');
 });
 
+app.post('/get_friend', function(req, res, next){
+	var key = removeGarbage(JSON.stringify(req.body));
+	key = key.substring(1, key.length-1);
+
+	client.get(key, function(err, response) {
+		if (err) {
+			console.log(err);
+			return;
+		} 
+		res.send(response);
+	});
+});
 app.listen(3000);
+
+function removeGarbage(str){
+	return str.substring(1, str.length-4);
+}
+
