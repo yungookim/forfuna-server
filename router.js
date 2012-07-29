@@ -6,7 +6,12 @@
 
 
 var express = require('express'), 
-;
+mc = require('mc');
+
+var client = new mc.Client();
+client.connect(function() {
+  console.log("Connected to the localhost memcache on port 11211!");
+});
 
 var app = module.exports = express.createServer();
 
@@ -20,8 +25,19 @@ app.get('/*', function(req, res, next){
 
 
 app.post('/prepare_profile', function(req, res, next){
-	var data = req.body;
+	var data = JSON.stringify(req.body);
+	data = data.substring(1, data.length-4);
+	data = JSON.parse(data);
+	var key = data.id + "#" + data.uuid;
+	//strip them so that the end users cannot read it.
+	data.id = '';
+	data.uuid = '';
+	//Save to memcached
+	client.set(key, data, { flags: 0, exptime: 0}, function(err, status) {
+		if (err) { 
+			console.log(err); // 'STORED' on success!
+		}
+	});
 });
-
 
 app.listen(3000);
