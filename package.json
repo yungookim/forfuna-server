@@ -1,0 +1,10 @@
+{
+  "name": "forfuna-server",
+  "version": "0.0.1",
+  "main": "forfuna",
+  "dependencies": {
+  	"express": "2.5.x",
+	"mc" : "1.0.x"
+  }
+}
+
