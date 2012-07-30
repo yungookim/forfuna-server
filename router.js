@@ -8,6 +8,8 @@
 var express = require('express'), 
 mc = require('mc');
 
+
+
 var client = new mc.Client();
 client.connect(function() {
   console.log("Connected to the localhost memcache on port 11211!");
@@ -47,7 +49,7 @@ app.post('/prepare_profile', function(req, res, next){
 	res.send('');
 });
 
-app.post('/get_friend', function(req, res, next){
+app.post('/get_friend_info', function(req, res, next){
 	var key = removeGarbage(JSON.stringify(req.body));
 	key = key.substring(1, key.length-1);
 
@@ -59,8 +61,25 @@ app.post('/get_friend', function(req, res, next){
 		res.send(response);
 	});
 });
-app.listen(3000);
 
+app.post('/request_friend', function(req, res, next){
+	var data = removeGarbage(JSON.stringify(req.body));
+	data = JSON.parse(data);
+	console.log(JSON.parse(data));
+	//id@uuid-type for key management? 'type' can be 'profile', 'frequest', etc
+	//Save to memcached
+	var key = data.id + "@" + data.uuid + '-frequest';
+	client.set(key, JSON.stringify(data), { flags: 0, exptime: 0}, function(err, status) {
+		if (err) { 
+			console.log(err);
+			return;
+		}
+		console.log(status);
+	});
+	res.send('');	
+});
+
+app.listen(3000);
 
 function removeGarbage(str){
 	return str.substring(1, str.length-4);
