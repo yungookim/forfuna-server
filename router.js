@@ -61,6 +61,7 @@ app.post('/get_friend', function(req, res, next){
 });
 app.listen(3000);
 
+
 function removeGarbage(str){
 	return str.substring(1, str.length-4);
 }
