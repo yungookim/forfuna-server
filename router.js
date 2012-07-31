@@ -1,7 +1,7 @@
 //Handles routing, broadcasting(in the future using socket.io) To reduce 
 //the bandwidth for the users, this router saves encrypted messages from 
 //the users in memcached and listens for updates.
-//When other users request a particular user's info, it simple sends back 
+//When other users request a particular user's info, it simply sends back 
 //the encrypted messages so the decryption can be done in the user's side.
 
 
@@ -27,11 +27,9 @@ app.get('/*', function(req, res, next){
 
 
 app.post('/prepare_profile', function(req, res, next){
-	var data = JSON.stringify(req.body);
-	data = data.substring(1, data.length-4);
+	var data = req.body;
 	//BUG : parse needs to be done twice.
 	//it will do for now. @Fix it 
-	data = JSON.parse(JSON.parse(data));
 	if (data.id == "GUBxhEHhQo"){
 		//dont save. this is a new user.
 		res.send('');
@@ -50,9 +48,7 @@ app.post('/prepare_profile', function(req, res, next){
 });
 
 app.post('/get_friend_info', function(req, res, next){
-	var key = removeGarbage(JSON.stringify(req.body));
-	key = key.substring(1, key.length-1);
-
+	var key = req.body.fid;
 	client.get(key, function(err, response) {
 		if (err) {
 			console.log(err);
@@ -63,9 +59,7 @@ app.post('/get_friend_info', function(req, res, next){
 });
 
 app.post('/request_friend', function(req, res, next){
-	var data = removeGarbage(JSON.stringify(req.body));
-	data = JSON.parse(data);
-	console.log(JSON.parse(data));
+	var data = req.body;
 	//id@uuid-type for key management? 'type' can be 'profile', 'frequest', etc
 	//Save to memcached
 	var key = data.id + "@" + data.uuid + '-frequest';
@@ -79,9 +73,19 @@ app.post('/request_friend', function(req, res, next){
 	res.send('');	
 });
 
+app.post('/get_updates', function(req, res, next){
+	console.log('fetching updates');
+	console.log(req.body);
+	var key = req.body.id + "@" + req.body.uuid;
+	var keys = [key + "-frequest"];
+	client.get(keys, function(err, response) {
+		if (err){
+			console.log(err);
+			res.send('');
+			return;
+		}
+		res.send(response);
+	});	
+});
 app.listen(3000);
-
-function removeGarbage(str){
-	return str.substring(1, str.length-4);
-}
 
